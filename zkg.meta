@@ -1,0 +1,20 @@
+[package]
+script_dir = scripts
+build_command = ./configure && cd build && make
+test_command = cd testing && btest -c btest.cfg
+summary = TODO: A summary of JSON in one line
+description = TODO: A more detailed description of JSON.
+	It can span multiple lines, with this indentation.
+
+[template]
+source = https://github.com/zeek/package-template
+version = v1.0.0
+zkg_version = 2.13.0
+features = github-ci,license,plugin
+
+[template_vars]
+name = JSON
+namespace = Zeek
+author = Fupeng Zhao <1620535041@qq.com>
+license = mit
+
