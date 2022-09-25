@@ -1,4 +1,4 @@
-JSON
+Zeek::JSON
 =================================
 
-TODO: tell people what your package does!
+A JSON parser for Zeek.

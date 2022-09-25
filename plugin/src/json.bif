@@ -1,14 +1,25 @@
-module Zeek::JSON;
+module JSON;
 
 %%{
-
-// This block is for required includes, declarations, and helper functions.
-
+#include "JSON.h"
 %%}
 
-# Built-in function implementations follow here. For help on these, see
-#
-# function foobar%(%): string
-# %{
-#	// ...
-# %}
+## A function to convert a JSON string into arbitraty Zeek data.
+##
+## json_str: a JSON formatted string.
+##
+## t: Type of zeek data.
+## 
+## returns: Zeek data.
+##
+## .. zeek:see:: to_json
+function from_json%(json_str: string, t: any%): any
+	%{
+	if ( t->GetType()->Tag() != zeek::TYPE_TYPE )
+		{
+		zeek::emit_builtin_error("from_json() requires a type argument");
+		return zeek::Val::nil;
+		}
+	
+	return zeek::json::from_json(json_str, IntrusivePtr{NewRef{}, t->AsType()});
+	%}
