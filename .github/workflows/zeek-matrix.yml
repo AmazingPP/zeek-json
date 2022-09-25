@@ -2,6 +2,7 @@ name: Zeek matrix tests
 
 on:
   push:
+    branches: [ master ]
   pull_request:
 
 jobs:
@@ -14,7 +15,7 @@ jobs:
         zeekver: [zeek, zeek-lts, zeek-nightly]
     steps:
       - uses: actions/checkout@v2
-      - uses: zeek/action-zkg-install@v1
+      - uses: zeek/action-zkg-install@v1.2
         with:
           zeek_version: ${{ matrix.zeekver }}
       - uses: actions/upload-artifact@v2
