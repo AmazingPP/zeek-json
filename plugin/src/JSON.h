@@ -36,6 +36,6 @@ CONVERTER_CLASS_DECL(VectorConverter)
 
 inline std::array<std::unique_ptr<Converter>, NUM_TYPES> converters;
 
-ValPtr from_json(const StringVal* json, const TypeVal& type);
+ValPtr from_json(StringVal* json, const zeek::Type* type);
 
 	}
