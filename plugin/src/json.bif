@@ -4,12 +4,12 @@ module JSON;
 #include "JSON.h"
 %%}
 
-## A function to convert a JSON string into arbitraty Zeek data.
+## A function to convert a JSON string into arbitrary Zeek data.
 ##
 ## json_str: a JSON formatted string.
 ##
 ## t: Type of zeek data.
-## 
+##
 ## returns: Zeek data.
 ##
 ## .. zeek:see:: to_json
@@ -20,6 +20,6 @@ function from_json%(json_str: string, t: any%): any
 		zeek::emit_builtin_error("from_json() requires a type argument");
 		return zeek::Val::nil;
 		}
-	
+
 	return zeek::json::from_json(json_str, t->AsType());
 	%}

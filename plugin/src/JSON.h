@@ -1,19 +1,20 @@
 #pragma once
 
+#include <rapidjson/document.h>
+#include <zeek/Val.h>
 #include <array>
 #include <memory>
-#include <zeek/Val.h>
-#include <rapidjson/document.h>
 
 namespace zeek::json
 	{
 
-#define CONVERTER_CLASS_DECL(name) class name final : public Converter 	\
-	{																				\
-public:																				\
-	bool Check(const rapidjson::Value& val) const override;							\
-	ValPtr Exec(const rapidjson::Value& val, const TypePtr& type) const override;	\
-	};
+#define CONVERTER_CLASS_DECL(name)                                                                 \
+	class name final : public Converter                                                            \
+		{                                                                                          \
+	public:                                                                                        \
+		bool Check(const rapidjson::Value& val) const override;                                    \
+		ValPtr Exec(const rapidjson::Value& val, const TypePtr& type) const override;              \
+		};
 
 class Converter
 	{

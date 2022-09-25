@@ -1,9 +1,5 @@
 #include "JSON.h"
 
-#include <array>
-#include <functional>
-#include <string_view>
-
 #include <rapidjson/error/en.h>
 #include <zeek/Attr.h>
 #include <zeek/Expr.h>
@@ -16,7 +12,7 @@ inline static ValPtr BuildVal(const rapidjson::Value& val, const TypePtr& type)
 	{
 	if ( val.IsNull() )
 		return Val::nil;
-	
+
 	auto&& converter = converters[type->Tag()];
 	if ( ! converter->Check(val) )
 		{
@@ -34,7 +30,7 @@ bool Converter::Check(const rapidjson::Value& val) const
 
 ValPtr Converter::Exec(const rapidjson::Value& val, const TypePtr& type) const
 	{
-	reporter->Error("Unsupport type: %s!", type->GetName().c_str());
+	reporter->Error("Unsupported type: %s!", type->GetName().c_str());
 	return Val::nil;
 	}
 
@@ -112,7 +108,8 @@ ValPtr RecordConverter::Exec(const rapidjson::Value& val, const TypePtr& type) c
 				}
 
 			if ( ! td_i->GetAttr(detail::ATTR_OPTIONAL) )
-				reporter->Error("%s field \"%s\" is null or missing!", type->GetName().c_str(), td_i->id);
+				reporter->Error("%s field \"%s\" is null or missing!", type->GetName().c_str(),
+				                td_i->id);
 
 			rv->Assign(i, Val::nil);
 			continue;
@@ -149,12 +146,11 @@ ValPtr from_json(StringVal* json, const zeek::Type* type)
 
 	if ( ! ok )
 		{
-		reporter->Error("JSON parse error: %s (%lu)",
-						rapidjson::GetParseError_En(ok.Code()),
-						ok.Offset());
+		reporter->Error("JSON parse error: %s (%lu)", rapidjson::GetParseError_En(ok.Code()),
+		                ok.Offset());
 		return Val::nil;
 		}
-	
+
 	return BuildVal(doc, type->AsTypeType()->GetType());
 	}
 

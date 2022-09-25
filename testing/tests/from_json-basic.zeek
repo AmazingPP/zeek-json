@@ -28,4 +28,3 @@ event zeek_init()
 
 	print a;
 	}
- 

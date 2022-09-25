@@ -1,7 +1,11 @@
-#include "config.h"
 #include "Plugin.h"
 
-namespace zeek::plugin::Zeek_JSON { Plugin plugin; }
+#include "config.h"
+
+namespace zeek::plugin::Zeek_JSON
+	{
+Plugin plugin;
+	}
 
 using namespace zeek::plugin::Zeek_JSON;
 

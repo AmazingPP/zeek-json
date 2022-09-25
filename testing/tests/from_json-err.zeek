@@ -14,4 +14,3 @@ event zeek_init()
 	print a;
 	print b;
 	}
- 
