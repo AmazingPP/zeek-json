@@ -7,6 +7,7 @@
 #include <rapidjson/error/en.h>
 #include <zeek/Attr.h>
 #include <zeek/Expr.h>
+#include <zeek/Reporter.h>
 
 namespace zeek::json
 	{
@@ -141,7 +142,7 @@ ValPtr VectorConverter::Exec(const rapidjson::Value& val, const TypePtr& type) c
 	return vv;
 	}
 
-ValPtr from_json(const StringVal* json, const TypeVal& type)
+ValPtr from_json(StringVal* json, const zeek::Type* type)
 	{
 	rapidjson::Document doc;
 	rapidjson::ParseResult ok = doc.Parse(json->CheckString(), json->Len());
@@ -154,7 +155,7 @@ ValPtr from_json(const StringVal* json, const TypeVal& type)
 		return Val::nil;
 		}
 	
-	return BuildVal(doc, type.GetType<TypeType>()->GetType());
+	return BuildVal(doc, type->AsTypeType()->GetType());
 	}
 
 	}
