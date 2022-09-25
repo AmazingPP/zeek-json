@@ -1,5 +1,5 @@
 [package]
-script_dir = scripts
+script_dir = plugin/scripts
 build_command = ./configure && cd build && make
 test_command = cd testing && btest -c btest.cfg
 summary = TODO: A summary of JSON in one line
