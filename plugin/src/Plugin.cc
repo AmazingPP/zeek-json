@@ -1,5 +1,6 @@
 #include "Plugin.h"
 
+#include "Converter.h"
 #include "config.h"
 
 namespace zeek::plugin::Zeek_JSON
