@@ -1,11 +1,16 @@
 #include "JSON.h"
 
 #include <broker/data.hh>
+#include <broker/error.hh>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
 #include <string.h>
 
 #include "Converter.h"
+
+#if ZEEK_VERSION_NUMBER > 50000
+namespace caf = broker;
+#endif
 
 namespace zeek::json
 	{
@@ -36,11 +41,11 @@ broker::expected<broker::data> JSONDocVal::DoSerialize() const
 
 bool JSONDocVal::DoUnserialize(const broker::data& data)
 	{
-	auto d = broker::get_if<broker::vector>(&data);
+	auto d = caf::get_if<broker::vector>(&data);
 	if ( ! d )
 		return false;
 
-	auto s = broker::get_if<std::string>(&(*d)[0]);
+	auto s = caf::get_if<std::string>(&(*d)[0]);
 	if ( ! s )
 		return false;
 
