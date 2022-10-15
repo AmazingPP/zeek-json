@@ -3,6 +3,7 @@ module JSON;
 %%{
 #include <rapidjson/error/en.h>
 #include <rapidjson/document.h>
+#include <rapidjson/pointer.h>
 
 #include "JSON.h"
 #include "Converter.h"
@@ -101,6 +102,42 @@ function json_obj_get%(obj: opaque of json_val, name: string%): opaque of json_v
 	%{
 	auto&& v = static_cast<zeek::json::JSONValVal*>(obj);
 	return zeek::make_intrusive<zeek::json::JSONValVal>(v->Get()[name->CheckString()], v->GetDoc());
+	%}
+
+# ===========================================================================
+#
+#                              JSON Pointer
+#
+# ===========================================================================
+
+function json_get_pointer%(val: opaque of json_val, pointer: string%): opaque of json_val
+	%{
+	auto&& v = static_cast<zeek::json::JSONValVal*>(val);
+	rapidjson::Pointer ptr(pointer->CheckString(), pointer->Len());
+
+	auto res = rapidjson::GetValueByPointer(v->Get(), ptr);
+	if ( ! res )
+		{
+		zeek::emit_builtin_error("Failed to find pointer.");
+		return nullptr;
+		}
+
+	return zeek::make_intrusive<zeek::json::JSONValVal>(*res, v->GetDoc());
+	%}
+
+function json_doc_get_pointer%(doc: opaque of json_doc, pointer: string%): opaque of json_val
+	%{
+	auto&& d = static_cast<zeek::json::JSONDocVal*>(doc);
+	rapidjson::Pointer ptr(pointer->CheckString(), pointer->Len());
+
+	auto res = rapidjson::GetValueByPointer(d->Get(), ptr);
+	if ( ! res )
+		{
+		zeek::emit_builtin_error("Failed to find pointer.");
+		return nullptr;
+		}
+
+	return zeek::make_intrusive<zeek::json::JSONValVal>(*res, IntrusivePtr{NewRef{}, d});
 	%}
 
 # ===========================================================================

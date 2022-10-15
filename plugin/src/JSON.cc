@@ -4,7 +4,6 @@
 #include <broker/error.hh>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
-#include <string.h>
 
 #include "Converter.h"
 
