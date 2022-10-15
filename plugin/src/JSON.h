@@ -1,42 +1,60 @@
 #pragma once
 
 #include <rapidjson/document.h>
-#include <zeek/Val.h>
-#include <array>
+#include <zeek/OpaqueVal.h>
 #include <memory>
+#include <string>
 
 namespace zeek::json
 	{
 
-#define CONVERTER_CLASS_DECL(name)                                                                 \
-	class name final : public Converter                                                            \
-		{                                                                                          \
-	public:                                                                                        \
-		bool Check(const rapidjson::Value& val) const override;                                    \
-		ValPtr Exec(const rapidjson::Value& val, const TypePtr& type) const override;              \
-		};
-
-class Converter
+class JSONDocVal : public OpaqueVal
 	{
 public:
-	Converter() = default;
-	virtual ~Converter() = default;
+	JSONDocVal(rapidjson::Document);
+	~JSONDocVal() noexcept = default;
 
-	virtual bool Check(const rapidjson::Value& val) const;
+	ValPtr DoClone(CloneState* state) override;
 
-	virtual ValPtr Exec(const rapidjson::Value& val, const TypePtr& type) const;
+	auto& Get() { return doc; }
+	const auto& Get() const { return doc; }
+
+protected:
+	JSONDocVal();
+
+	DECLARE_OPAQUE_VALUE(JSONDocVal)
+
+private:
+	rapidjson::Document doc;
 	};
 
-CONVERTER_CLASS_DECL(BoolConverter)
-CONVERTER_CLASS_DECL(IntConverter)
-CONVERTER_CLASS_DECL(CountConverter)
-CONVERTER_CLASS_DECL(DoubleConverter)
-CONVERTER_CLASS_DECL(StringConverter)
-CONVERTER_CLASS_DECL(RecordConverter)
-CONVERTER_CLASS_DECL(VectorConverter)
+using JSONDocValPtr = IntrusivePtr<JSONDocVal>;
 
-inline std::array<std::unique_ptr<Converter>, NUM_TYPES> converters;
+class JSONValVal : public OpaqueVal
+	{
+public:
+	static inline rapidjson::Value nil;
 
-ValPtr from_json(StringVal* json, const zeek::Type* type);
+	JSONValVal(rapidjson::Value&, const JSONDocValPtr);
+	~JSONValVal() noexcept = default;
+
+	ValPtr DoClone(CloneState* state) override;
+
+	auto& Get() { return val; }
+	const auto& Get() const { return val; }
+	auto& GetDoc() { return doc; }
+	const auto& GetDoc() const { return doc; }
+
+protected:
+	JSONValVal();
+
+	DECLARE_OPAQUE_VALUE(JSONValVal)
+
+private:
+	rapidjson::Value& val;
+	const JSONDocValPtr doc;
+	};
+
+std::string stringify(const rapidjson::Value&);
 
 	}

@@ -2,8 +2,6 @@
 
 #include <zeek/plugin/Plugin.h>
 
-#include "JSON.h"
-
 namespace zeek::plugin
 	{
 namespace Zeek_JSON

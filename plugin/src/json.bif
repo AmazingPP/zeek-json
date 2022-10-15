@@ -1,7 +1,14 @@
 module JSON;
 
 %%{
+#include <rapidjson/error/en.h>
+#include <rapidjson/document.h>
+#include <rapidjson/pointer.h>
+
 #include "JSON.h"
+#include "Converter.h"
+
+#define CAST_JSON(v) static_cast<zeek::json::JSONValVal*>((v))->Get()
 %%}
 
 ## A function to convert a JSON string into arbitrary Zeek data.
@@ -18,8 +25,178 @@ function from_json%(json_str: string, t: any%): any
 	if ( t->GetType()->Tag() != zeek::TYPE_TYPE )
 		{
 		zeek::emit_builtin_error("from_json() requires a type argument");
-		return zeek::Val::nil;
+		return nullptr;
 		}
 
 	return zeek::json::from_json(json_str, t->AsType());
+	%}
+
+function json_parse%(json_str: string%): opaque of json_doc
+	%{
+	rapidjson::Document doc;
+	rapidjson::ParseResult ok = doc.Parse(json_str->CheckString(), json_str->Len());
+	if ( ! ok )
+		{
+		zeek::emit_builtin_error(zeek::util::fmt(
+			"JSON parse error: %s (%lu)", rapidjson::GetParseError_En(ok.Code()), ok.Offset()));
+		return nullptr;
+		}
+
+	return zeek::make_intrusive<zeek::json::JSONDocVal>(std::move(doc));
+	%}
+
+function json_doc_get_root%(doc: opaque of json_doc%): opaque of json_val
+	%{
+	auto d = static_cast<zeek::json::JSONDocVal*>(doc);
+	return zeek::make_intrusive<zeek::json::JSONValVal>(d->Get(), IntrusivePtr{NewRef{}, d});
+	%}
+
+function json_stringify%(val: opaque of json_val%): string
+	%{
+	return zeek::make_intrusive<zeek::StringVal>(zeek::json::stringify(CAST_JSON(val)));
+	%}
+
+function json_get_bool%(val: opaque of json_val%): bool
+	%{
+	return val_mgr->Bool(CAST_JSON(val).GetBool());
+	%}
+
+function json_get_int%(val: opaque of json_val%): int
+	%{
+	return val_mgr->Int(CAST_JSON(val).GetInt64());
+	%}
+
+function json_get_count%(val: opaque of json_val%): count
+	%{
+	return val_mgr->Count(CAST_JSON(val).GetUint64());
+	%}
+
+function json_get_double%(val: opaque of json_val%): double
+	%{
+	return zeek::make_intrusive<zeek::DoubleVal>(CAST_JSON(val).GetDouble());
+	%}
+
+function json_get_string%(val: opaque of json_val%): string
+	%{
+	auto&& v = CAST_JSON(val);
+	return zeek::make_intrusive<zeek::StringVal>(v.GetStringLength(), v.GetString());
+	%}
+
+function json_get_arr_size%(arr: opaque of json_val%): count
+	%{
+	return val_mgr->Count(CAST_JSON(arr).Size());
+	%}
+
+function json_arr_get%(arr: opaque of json_val, index: count%): opaque of json_val
+	%{
+	auto&& v = static_cast<zeek::json::JSONValVal*>(arr);
+	return zeek::make_intrusive<zeek::json::JSONValVal>(v->Get()[index], v->GetDoc());
+	%}
+
+function json_has_member%(val: opaque of json_val, name: string%): bool
+	%{
+	return val_mgr->Bool(CAST_JSON(val).HasMember(name->CheckString()));
+	%}
+
+function json_obj_get%(obj: opaque of json_val, name: string%): opaque of json_val
+	%{
+	auto&& v = static_cast<zeek::json::JSONValVal*>(obj);
+	return zeek::make_intrusive<zeek::json::JSONValVal>(v->Get()[name->CheckString()], v->GetDoc());
+	%}
+
+# ===========================================================================
+#
+#                              JSON Pointer
+#
+# ===========================================================================
+
+function json_get_pointer%(val: opaque of json_val, pointer: string%): opaque of json_val
+	%{
+	auto&& v = static_cast<zeek::json::JSONValVal*>(val);
+	rapidjson::Pointer ptr(pointer->CheckString(), pointer->Len());
+
+	auto res = rapidjson::GetValueByPointer(v->Get(), ptr);
+	if ( ! res )
+		{
+		zeek::emit_builtin_error("Failed to find pointer.");
+		return nullptr;
+		}
+
+	return zeek::make_intrusive<zeek::json::JSONValVal>(*res, v->GetDoc());
+	%}
+
+function json_doc_get_pointer%(doc: opaque of json_doc, pointer: string%): opaque of json_val
+	%{
+	auto&& d = static_cast<zeek::json::JSONDocVal*>(doc);
+	rapidjson::Pointer ptr(pointer->CheckString(), pointer->Len());
+
+	auto res = rapidjson::GetValueByPointer(d->Get(), ptr);
+	if ( ! res )
+		{
+		zeek::emit_builtin_error("Failed to find pointer.");
+		return nullptr;
+		}
+
+	return zeek::make_intrusive<zeek::json::JSONValVal>(*res, IntrusivePtr{NewRef{}, d});
+	%}
+
+# ===========================================================================
+#
+#                              Type checking
+#
+# ===========================================================================
+
+function json_is_false%(val: opaque of json_val%): bool
+	%{
+	return val_mgr->Bool(CAST_JSON(val).IsFalse());
+	%}
+
+function json_is_true%(val: opaque of json_val%): bool
+	%{
+	return val_mgr->Bool(CAST_JSON(val).IsTrue());
+	%}
+
+function json_is_bool%(val: opaque of json_val%): bool
+	%{
+	return val_mgr->Bool(CAST_JSON(val).IsBool());
+	%}
+
+function json_is_null%(val: opaque of json_val%): bool
+	%{
+	return val_mgr->Bool(CAST_JSON(val).IsNull());
+	%}
+
+function json_is_number%(val: opaque of json_val%): bool
+	%{
+	return val_mgr->Bool(CAST_JSON(val).IsNumber());
+	%}
+
+function json_is_string%(val: opaque of json_val%): bool
+	%{
+	return val_mgr->Bool(CAST_JSON(val).IsString());
+	%}
+
+function json_is_array%(val: opaque of json_val%): bool
+	%{
+	return val_mgr->Bool(CAST_JSON(val).IsArray());
+	%}
+
+function json_is_object%(val: opaque of json_val%): bool
+	%{
+	return val_mgr->Bool(CAST_JSON(val).IsObject());
+	%}
+
+function json_is_int%(val: opaque of json_val%): bool
+	%{
+	return val_mgr->Bool(CAST_JSON(val).IsInt64());
+	%}
+
+function json_is_uint%(val: opaque of json_val%): bool
+	%{
+	return val_mgr->Bool(CAST_JSON(val).IsUint64());
+	%}
+
+function json_is_double%(val: opaque of json_val%): bool
+	%{
+	return val_mgr->Bool(CAST_JSON(val).IsDouble());
 	%}
